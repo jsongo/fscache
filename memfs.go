@@ -11,7 +11,7 @@ import (
 	"gopkg.in/djherbis/stream.v1"
 )
 
-type memFS struct {
+type MemFS struct {
 	mu    sync.RWMutex
 	files map[string]*memFile
 }
@@ -19,12 +19,12 @@ type memFS struct {
 // NewMemFs creates an in-memory FileSystem.
 // It does not support persistence (Reload is a nop).
 func NewMemFs() FileSystem {
-	return &memFS{
+	return &MemFS{
 		files: make(map[string]*memFile),
 	}
 }
 
-func (fs *memFS) Stat(name string) (FileInfo, error) {
+func (fs *MemFS) Stat(name string) (FileInfo, error) {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
 	f, ok := fs.files[name]
@@ -47,11 +47,11 @@ func (fs *memFS) Stat(name string) (FileInfo, error) {
 	}, nil
 }
 
-func (fs *memFS) Reload(add func(key, name string)) error {
+func (fs *MemFS) Reload(add func(key, name string)) error {
 	return nil
 }
 
-func (fs *memFS) Create(key string) (stream.File, error) {
+func (fs *MemFS) Create(key string) (stream.File, error) {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	if _, ok := fs.files[key]; ok {
@@ -67,7 +67,7 @@ func (fs *memFS) Create(key string) (stream.File, error) {
 	return file, nil
 }
 
-func (fs *memFS) Open(name string) (stream.File, error) {
+func (fs *MemFS) Open(name string) (stream.File, error) {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	if f, ok := fs.files[name]; ok {
@@ -77,14 +77,14 @@ func (fs *memFS) Open(name string) (stream.File, error) {
 	return nil, errors.New("file does not exist")
 }
 
-func (fs *memFS) Remove(key string) error {
+func (fs *MemFS) Remove(key string) error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	delete(fs.files, key)
 	return nil
 }
 
-func (fs *memFS) RemoveAll() error {
+func (fs *MemFS) RemoveAll() error {
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	fs.files = make(map[string]*memFile)
